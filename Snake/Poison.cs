@@ -66,7 +66,7 @@ namespace Snake
 
             do
             {
-                if (_poison == null && Snake.IsAlive && IsActive)
+                if (_poison == null && /*Snake.IsAlive*/ IsActive)
                 {
                     isGenerated = true;
                     _poison = new();
@@ -92,18 +92,18 @@ namespace Snake
                     _x = _random.Next(1, Borders.Width - 1);
                     _y = _random.Next(1, Borders.Height - 1);
 
-                    foreach (Position item in Snake.SnakeBody)
-                    {
-                        if (item.X == _x && item.Y == _y)
-                        {
-                            canSetPosition = false;
-                        }
-                    }
+                    //foreach (Position item in Snake.SnakeBody)
+                    //{
+                    //    if (item.X == _x && item.Y == _y)
+                    //    {
+                    //        canSetPosition = false;
+                    //    }
+                    //}
 
-                    if (Food.X == _x && Food.Y == _y)
-                    {
-                        canSetPosition = false;
-                    }
+                    //if (Food.X == _x && Food.Y == _y)
+                    //{
+                    //    canSetPosition = false;
+                    //}
                 } while (!canSetPosition);
             }
            

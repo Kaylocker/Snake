@@ -1,76 +1,33 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Snake
 {
     class Special : Food
     {
-        private static Special _special;
-        private static bool _isActive = false;
         private char _body = '▲';
-        public static bool IsActive { get => _isActive; set => _isActive = value; }
 
-        private Special()
+        public Special()
         {
-            FindPosition();
-            SetPosition();
+            CurrentType = SPECIAL;
         }
 
-        private void FindPosition()
-        {
-            bool canSetPosition = true;
-
-            do
-            {
-                X = random.Next(1, Borders.Width - 1);
-                Y = random.Next(1, Borders.Height - 1);
-
-                foreach (Position item in Snake.SnakeBody)
-                {
-                    if (item.X == X && item.Y == Y)
-                    {
-                        canSetPosition = false;
-                    }
-                }
-            } while (!canSetPosition);
-        }
-
-        public static void GetInstance()
-        {
-            if (_special == null)
-            {
-                _special = new();
-            }
-        }
-
-        public static bool CheckInstance()
-        {
-            if (_special != null)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public static new void Destroy()
-        {
-            if (_special != null)
-            {
-                _special = null;
-            }
-        }
-
-        private void SetPosition()
+        private void Generate()
         {
             Console.CursorVisible = false;
-            Console.SetCursorPosition(X, Y);
+            Console.SetCursorPosition(Position.X, Position.Y);
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.BackgroundColor = ConsoleColor.DarkCyan;
             Console.Write(_body);
 
             Console.ResetColor();
+        }
+
+        public override void Instantiate(List<Position> snakeBody)
+        {
+            _snakeBody = snakeBody;
+            FindPosition();
+            Generate();
         }
     }
 }

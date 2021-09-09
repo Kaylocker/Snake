@@ -1,15 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Snake
+﻿namespace Snake
 {
-    class GameConfiguration
+    class GameConfiguration 
     {
-        private static int _speed=100;
+        private int _speed;
+        private const int LOW_SPEED = 200, MEDIUM_SPEED = 100, HIGH_SPEED = 50, SUPER_SPEED = 25;
+        private bool _isSpecialFoodActive = false, _isAcceleratorFoodActive = false, _isPoisonActive = false;
 
-        public static int Speed { get => _speed; set => _speed = value; }
+        public int LowSpeed { get => LOW_SPEED; }
+        public int MediumSpeed { get => MEDIUM_SPEED; }
+        public int HighSpeed { get => HIGH_SPEED; }
+        public int SuperSpeed { get => SUPER_SPEED; }
+        public bool IsSpecialFoodActive { get=>_isSpecialFoodActive; set=>_isSpecialFoodActive=value; }
+        public bool IsAcceleratorFoodActive { get=> _isAcceleratorFoodActive; set=> _isAcceleratorFoodActive = value; }
+        public bool IsPoisonActive { get=> _isPoisonActive; set=> _isPoisonActive = value; }
+        public GameConfiguration()
+        {
+            _speed = MEDIUM_SPEED;
+        }
+
+        public int Speed { get => _speed; set => _speed = value; }
     }
 }

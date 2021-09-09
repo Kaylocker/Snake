@@ -1,63 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Snake
 {
     class Classic : Food
     {
-        private static Classic _classic;
-        private static bool _isActive = true;
         private char _body = '♥';
-        public static bool IsActive { get => _isActive; set => _isActive = value; }
 
-        private Classic()
+        public Classic()
         {
-            FindPosition();
-            SetPosition();
+            CurrentType = CLASSIC;
         }
 
-        protected void FindPosition()
-        {
-            bool canSetPosition = true;
-
-            do
-            {
-                X = random.Next(1, Borders.Width - 1);
-                Y = random.Next(1, Borders.Height - 1);
-
-                foreach (Position item in Snake.SnakeBody)
-                {
-                    if (item.X == X && item.Y == Y)
-                    {
-                        canSetPosition = false;
-                    }
-                }
-            } while (!canSetPosition);
-        }
-
-        public static void GetInstance()
-        {
-            if (_classic == null)
-            {
-                _classic = new();
-            }
-        }
-
-        public static bool CheckInstance()
-        {
-            if (_classic != null)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        private void SetPosition()
+        private void Generate()
         {
             Console.CursorVisible = false;
-            Console.SetCursorPosition(X, Y);
+            Console.SetCursorPosition(Position.X, Position.Y);
             Console.ForegroundColor = ConsoleColor.DarkRed;
             Console.BackgroundColor = ConsoleColor.DarkCyan;
             Console.Write(_body);
@@ -65,12 +23,11 @@ namespace Snake
             Console.ResetColor();
         }
 
-        public static new void Destroy()
+        public override void Instantiate(List<Position> snakeBody)
         {
-            if (_classic != null)
-            {
-                _classic = null;
-            }
+            _snakeBody = snakeBody;
+            FindPosition();
+            Generate();
         }
     }
 

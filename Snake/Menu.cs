@@ -9,47 +9,51 @@ namespace Snake
 {
     class Menu
     {
+        GameConfiguration _gameConfigurator;
         private static int _height = 30;
         private static int _width = 50;
-        private static int _globalPosition;
-        private static int _localPosition;
+        private int _globalPosition;
+        private int _localPosition;
         private readonly string _name;
-        private const int ON = 1, OFF = 0;
+        private int _currentSnakeSpeed;
+        
 
         private static Dictionary<bool, string> _status = new Dictionary<bool, string>();
-        private static List<Menu> _currentMenu = new();
-        private static List<Menu> _start = new();
-        private static List<Menu> _settings = new();
-        private static List<Menu> _speedSettings = new();
-        private static List<Menu> _foodTypeSettings = new();
-        private static List<Menu> _wallSettings = new();
-        private static List<Menu> _soundSettings = new();
+        private List<Menu> _currentMenu = new();
+        private List<Menu> _start = new();
+        private List<Menu> _settings = new();
+        private List<Menu> _speedSettings = new();
+        private List<Menu> _foodTypeSettings = new();
+        private List<Menu> _wallSettings = new();
+        private List<Menu> _soundSettings = new();
 
-        public static List<Menu> Start { get => _start; private set => _start = value; }
-        public static List<Menu> Settings { get => _settings; private set => _settings = value; }
-        public static List<Menu> SpeedSnake { get => _speedSettings; private set => _speedSettings = value; }
-        public static List<Menu> FoodType { get => _foodTypeSettings; private set => _foodTypeSettings = value; }
-        public static List<Menu> WallSetings { get => _wallSettings; private set => _wallSettings = value; }
-        public static List<Menu> Sound { get => _soundSettings; private set => _soundSettings = value; }
-        public static int GlobalCounter { get => _globalPosition; set => _globalPosition = value; }
-        public static int LocalCounter { get => _localPosition; set => _localPosition = value; }
+        public GameConfiguration GameConfigurator { get=>_gameConfigurator; init=>_gameConfigurator=value; }
+        public List<Menu> Start { get => _start; private set => _start = value; }
+        public List<Menu> Settings { get => _settings; private set => _settings = value; }
+        public List<Menu> SpeedSettings { get => _speedSettings; private set => _speedSettings = value; }
+        public List<Menu> FoodTypeSettings { get => _foodTypeSettings; private set => _foodTypeSettings = value; }
+        public List<Menu> WallSetings { get => _wallSettings; private set => _wallSettings = value; }
+        public List<Menu> SoundSettings { get => _soundSettings; private set => _soundSettings = value; }
+        public List<Menu> CurrentMenu { get => _currentMenu; set => _currentMenu = value; }
+        public int GlobalPosition { get => _globalPosition; set => _globalPosition = value; }
+        public int LocalPosition { get => _localPosition; set => _localPosition = value; }
+        public int CurrentSnakeSpeed { get => _currentSnakeSpeed; set => _currentSnakeSpeed = value; }
 
-        public Menu()
+        public Menu(GameConfiguration gameConfigurator)
         {
             Console.CursorVisible = false;
             Debug.Assert(OperatingSystem.IsWindows());
             Console.Title = "Snake";
             Console.SetWindowSize(_width, _height);
             Console.SetBufferSize(_width + 1, _height + 1);
+            GameConfigurator = gameConfigurator;
 
             _globalPosition = 0;
             _localPosition = 0;
             _currentMenu = _start;
+            _currentSnakeSpeed = _gameConfigurator.Speed;
             _status.Add(false, "OFF");
             _status.Add(true, "ON");
-
-            Thread controller = new(ControllerPosition);
-            controller.Start();
 
             SetStartMenu();
             SetSettingsMenu();
@@ -66,14 +70,14 @@ namespace Snake
             _name = name;
         }
 
-        private static void SetStartMenu()
+        private void SetStartMenu()
         {
             _start.Add(new Menu("Start game"));
             _start.Add(new Menu("Settings"));
             _start.Add(new Menu("Exit"));
         }
 
-        private static void SetSettingsMenu()
+        private void SetSettingsMenu()
         {
             _settings.Add(new Menu("Speed"));
             _settings.Add(new Menu("Types of food"));
@@ -82,7 +86,7 @@ namespace Snake
             _settings.Add(new Menu("Back "));
         }
 
-        private static void SetSpeedSettings()
+        private void SetSpeedSettings()
         {
             _speedSettings.Add(new Menu("50 speed"));
             _speedSettings.Add(new Menu("100 speed"));
@@ -91,7 +95,7 @@ namespace Snake
             _speedSettings.Add(new Menu("Back "));
         }
 
-        private static void SetFoodTypeSettings()
+        private void SetFoodTypeSettings()
         {
             _foodTypeSettings.Add(new Menu("Special food"));
             _foodTypeSettings.Add(new Menu("Poison"));
@@ -99,258 +103,19 @@ namespace Snake
             _foodTypeSettings.Add(new Menu("Back "));
         }
 
-        private static void SetWallSettings()
+        private void SetWallSettings()
         {
             _wallSettings.Add(new Menu("Empty walls"));
             _wallSettings.Add(new Menu("Back "));
         }
 
-        private static void SetSoundSettings()
+        private void SetSoundSettings()
         {
             _soundSettings.Add(new Menu("Game Sound"));
             _soundSettings.Add(new Menu("Back "));
         }
 
-        public static void ControllerPosition()
-        {
-            while (true)
-            {
-                if (Snake.IsAlive)
-                {
-                    continue;
-                }
-
-                switch (Input.InputKey)
-                {
-                    case ConsoleKey.W:
-                    case ConsoleKey.UpArrow:
-                        {
-                            _localPosition--;
-
-                            if (_localPosition < 0 && !Snake.IsAlive)
-                            {
-                                _localPosition = _currentMenu.Count - 1;
-                            }
-                            else if(_localPosition < 0 && Snake.IsAlive)
-                            {
-                                _localPosition = 0;
-                            }
-
-                            Input.InputKey = default;
-                            ShowCurrentMenu();
-
-                            break;
-                        }
-                    case ConsoleKey.S:
-                    case ConsoleKey.DownArrow:
-                        {
-                            _localPosition++;
-
-                            if (_localPosition > _currentMenu.Count - 1)
-                            {
-                                _localPosition = 0;
-                            }
-
-                            Input.InputKey = default;
-                            ShowCurrentMenu();
-
-                            break;
-                        }
-                    case ConsoleKey.Enter:
-                        {
-                            Input.InputKey = default;
-                            MainController();
-
-                            break;
-                        }
-                }
-            }
-        }
-
-        private static void MainController()
-        {
-            switch (_globalPosition)
-            {
-                case (int)MenuPosition.Start:
-                    {
-                        if (_localPosition == 0)
-                        {
-                            Program.Play();
-                            Console.SetCursorPosition(0, 0);
-                            _globalPosition = (int)MenuPosition.Start;
-                            _localPosition = (int)MenuPosition.Zero;
-                            DrawBackgroundMenu();
-                            
-                        }
-                        else if (_localPosition == 1)
-                        {
-                            _globalPosition = (int)MenuPosition.Settings;
-                            _localPosition = (int)MenuPosition.Zero;
-                            _currentMenu = _settings;
-                        }
-                        else if (_localPosition == 2)
-                        {
-                            System.Environment.Exit(1);
-                        }
-
-                        ShowCurrentMenu();
-                        break;
-                    }
-                case (int)MenuPosition.Settings:
-                    {
-                        if (_localPosition == (int)MenuPosition.Zero)
-                        {
-                            _globalPosition = (int)MenuPosition.SpeedSettings;
-                            _currentMenu = _speedSettings;
-                        }
-                        else if (_localPosition == (int)MenuPosition.First)
-                        {
-                            _globalPosition = (int)MenuPosition.FoodTypeSettings;
-                            _currentMenu = _foodTypeSettings;
-                        }
-                        else if (_localPosition == (int)MenuPosition.Second)
-                        {
-                            _globalPosition = (int)MenuPosition.WallSettings;
-                            _currentMenu = _wallSettings;
-                        }
-                        else if (_localPosition == (int)MenuPosition.Third)
-                        {
-                            _globalPosition = (int)MenuPosition.SoundsSettings;
-                            _currentMenu = _soundSettings;
-                        }
-                        else if (_localPosition == (int)MenuPosition.Fourth)
-                        {
-                            _globalPosition = (int)MenuPosition.Start;
-                            _currentMenu = _start;
-                        }
-
-                        _localPosition = (int)MenuPosition.Zero;
-                        ShowCurrentMenu();
-                        break;
-                    }
-                case (int)MenuPosition.SpeedSettings:
-                    {
-                        if (_localPosition == (int)MenuPosition.Zero)
-                        {
-                            Snake.Speed = 200;
-                            // set speed 100
-                        }
-                        else if (_localPosition == (int)MenuPosition.First)
-                        {
-                            Snake.Speed = 100;
-                            // set speed 50
-                        }
-                        else if (_localPosition == (int)MenuPosition.Second)
-                        {
-                            Snake.Speed = 50;
-                            // set speed 25
-                        }
-                        else if (_localPosition == (int)MenuPosition.Third)
-                        {
-                            Snake.Speed = 25;
-                            // set speed 10
-                        }
-                        else if (_localPosition == (int)MenuPosition.Fourth)
-                        {
-                            _globalPosition = (int)MenuPosition.Settings;
-                            _localPosition = 0;
-                            _currentMenu = _settings;
-                            // back
-                        }
-
-                        ShowCurrentMenu();
-                        break;
-                    }
-                case (int)MenuPosition.FoodTypeSettings:
-                    {
-                        if (_localPosition == (int)MenuPosition.Zero)
-                        {
-                            if (!Special.IsActive)
-                            {
-                                Special.IsActive = true;
-                            }
-                            else
-                            {
-                                Special.IsActive = false;
-                            }
-                        }
-                        else if (_localPosition == (int)MenuPosition.First)
-                        {
-                            if (!Poison.IsActive)
-                            {
-                                Poison.IsActive = true;
-                            }
-                            else
-                            {
-                                Poison.IsActive = false;
-                            }
-                        }
-                        else if (_localPosition == (int)MenuPosition.Second)
-                        {
-                            if (!Accelerator.IsActive)
-                            {
-                                Accelerator.IsActive = true;
-                            }
-                            else
-                            {
-                                Accelerator.IsActive = false;
-                            }
-                        }
-                        else if (_localPosition == (int)MenuPosition.Third)
-                        {
-                            _globalPosition = (int)MenuPosition.Settings;
-                            _localPosition = 0;
-                            _currentMenu = _settings;
-                        }
-
-                        ShowCurrentMenu();
-                        break;
-                    }
-                case (int)MenuPosition.WallSettings:
-                    {
-                        if (_localPosition == (int)MenuPosition.Zero)
-                        {
-                            if (!Borders.EmptyWalls)
-                            {
-                                Borders.EmptyWalls = true;
-                            }
-                            else
-                            {
-                                Borders.EmptyWalls = false;
-                            }
-                            // set wall empty mode on off
-                        }
-                        else if (_localPosition == (int)MenuPosition.First)
-                        {
-                            _globalPosition = (int)MenuPosition.Settings;
-                            _localPosition = 0;
-                            _currentMenu = _settings;
-                            // back
-                        }
-
-                        ShowCurrentMenu();
-                        break;
-                    }
-                case (int)MenuPosition.SoundsSettings:
-                    {
-                        if (_localPosition == (int)MenuPosition.Zero)
-                        {
-                            // sounds on off 
-                        }
-                        else if (_localPosition == (int)MenuPosition.First)
-                        {
-                            _globalPosition = (int)MenuPosition.Settings;
-                            _localPosition = 0;
-                            _currentMenu = _settings;
-                            // back
-                        }
-
-                        ShowCurrentMenu();
-                        break;
-                    }
-            }
-        }
-        public static void ShowCurrentMenu()
+        public void ShowCurrentMenu()
         {
             int counter = 0;
 
@@ -379,7 +144,8 @@ namespace Snake
                 counter++;
             }
         }
-        private static void ShowGameInformation()
+
+        private void ShowGameInformation()
         {
             ConsoleColor gameInformationTextColor = ConsoleColor.Yellow;
             int counter = 1;
@@ -389,15 +155,15 @@ namespace Snake
 
             Console.Write("Current game settings");
             Console.SetCursorPosition((1), _height / 2 + counter++);
-            Console.Write($"Speed: {10000 / Snake.Speed}");
+            Console.Write($"Speed: {10000 / CurrentSnakeSpeed }  ");
 
             string wallMode, standardFoodStatus, specialFoodStatus, poisonFoodStatus, acceleratorFoodStatus, soundStatus;
             {
                 _status.TryGetValue(Borders.EmptyWalls, out wallMode);
-                _status.TryGetValue(Classic.IsActive, out standardFoodStatus);
-                _status.TryGetValue(Special.IsActive, out specialFoodStatus);
-                _status.TryGetValue(Poison.IsActive, out poisonFoodStatus);
-                _status.TryGetValue(Accelerator.IsActive, out acceleratorFoodStatus);
+                _status.TryGetValue(true, out standardFoodStatus);
+                _status.TryGetValue(_gameConfigurator.IsSpecialFoodActive, out specialFoodStatus);
+                _status.TryGetValue(_gameConfigurator.IsPoisonActive, out poisonFoodStatus);
+                _status.TryGetValue(_gameConfigurator.IsAcceleratorFoodActive, out acceleratorFoodStatus);
                 _status.TryGetValue(Music.IsOn, out soundStatus);
             }
 
@@ -441,7 +207,7 @@ namespace Snake
             Console.SetCursorPosition((int)MenuPosition.Zero, (int)MenuPosition.Zero);
         }
 
-        public static void DrawBackgroundMenu()
+        public void DrawBackgroundMenu()
         {
             for (int i = 0; i < _height; i++)
             {
