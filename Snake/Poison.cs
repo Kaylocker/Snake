@@ -1,120 +1,100 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 
 namespace Snake
 {
     class Poison
     {
-        object findPosLocker = new();
-        private static Thread _generator;
-        private static Poison _poison;
-        private static Random _random = new();
-        private static bool _isActive = false;
-        private static int _x;
-        private static int _y;
-        private const int DELAY = 1000;
+        object _poisonLocker = new();
+        Thread _poisonGenerator;
+        private Food _food;
+        private Random _random = new();
+        private Snake _snake;
+        private Position _position;
+        private int DELAY = 300;
         private char _body = '†';
-        public static int X { get => _x; }
-        public static int Y { get => _y; }
-        public static bool IsActive { get => _isActive; set => _isActive = value; }
-        public static bool IsThreadGeneratorActive
-        {
-            get
-            {
-                if (_generator == null || _generator.IsAlive == false)
-                {
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
-            }
-        }
+        private bool _isSnakeAlive;
 
-        private Poison()
+        public Food Food { init => _food = value; }
+        public bool IsSnakeAlive { get => _isSnakeAlive; set => _isSnakeAlive = value; }
+        public Position Position { get => _position; }
+
+        public Poison(Food food, bool isPoisonActivate, Snake snake)
         {
-            lock (findPosLocker)
+            if (!isPoisonActivate)
+            {
+                return;
+            }
+
+            Food = food;
+            _snake = snake;
+
+            _poisonGenerator = new Thread(new ThreadStart(Generator));
+            _poisonGenerator.Start();
+
+        }
+        private void Generator()
+        {
+            do
             {
                 FindPosition();
-
                 SetPosition();
-            }
+
+
                 for (int i = 0; i < 10; i++)
                 {
                     Thread.Sleep(DELAY);
                 }
 
-                _poison = null;
-
-            lock (findPosLocker)
-            {
                 ClearBody();
 
-                GetInstance();
-            }
-           
-            
+            } while (_snake.IsAlive);
+
+            _poisonGenerator.Join();
+
         }
 
-        public static void GetInstance()
+        public void StopThread()
         {
-            bool isGenerated = false;
-
-            do
-            {
-                if (_poison == null && /*Snake.IsAlive*/ IsActive)
-                {
-                    isGenerated = true;
-                    _poison = new();
-                }
-            } while (!isGenerated);
-
+            _poisonGenerator.Join();
         }
 
-        public static void Generator()
-        {
-            ThreadStart poisonGenerator = new(GetInstance);
-            _generator = new Thread(poisonGenerator);
-            _generator.Start();
-        }
         private void FindPosition()
         {
-            lock (findPosLocker)
+            lock (_poisonLocker)
             {
                 bool canSetPosition = true;
 
                 do
                 {
-                    _x = _random.Next(1, Borders.Width - 1);
-                    _y = _random.Next(1, Borders.Height - 1);
+                    int x = _random.Next(1, Borders.Width - 1);
+                    int y = _random.Next(1, Borders.Height - 1);
 
-                    //foreach (Position item in Snake.SnakeBody)
-                    //{
-                    //    if (item.X == _x && item.Y == _y)
-                    //    {
-                    //        canSetPosition = false;
-                    //    }
-                    //}
+                    _position = new(x, y);
 
-                    //if (Food.X == _x && Food.Y == _y)
-                    //{
-                    //    canSetPosition = false;
-                    //}
+                    foreach (Position item in _snake.SnakeBody)
+                    {
+                        if (item == _position)
+                        {
+                            canSetPosition = false;
+                        }
+                    }
+
+                    if (_food.Position == _position)
+                    {
+                        canSetPosition = false;
+                    }
                 } while (!canSetPosition);
             }
-           
-        }
 
+        }
+         
         private void SetPosition()
         {
-            lock (findPosLocker)
+            lock (_poisonLocker)
             {
                 Console.CursorVisible = false;
-                Console.SetCursorPosition(_x, _y);
+                Console.SetCursorPosition(_position.X, _position.Y);
                 Console.ForegroundColor = ConsoleColor.Black;
                 Console.BackgroundColor = ConsoleColor.DarkCyan;
                 Console.Write(_body);
@@ -123,21 +103,16 @@ namespace Snake
             }
         }
 
-        public static void Destroy()
-        {
-            _poison = null;
-        }
-
         private void ClearBody()
         {
-            lock (findPosLocker)
-            {
-                Console.SetCursorPosition(_x, _y);
+            //lock (_poisonLocker)
+            //{
+            Console.SetCursorPosition(_position.X, _position.Y);
 
-                Console.BackgroundColor = ConsoleColor.DarkCyan;
-                Console.WriteLine(" ");
-            }
-           
+            Console.BackgroundColor = ConsoleColor.DarkCyan;
+            Console.WriteLine(" ");
+            //}
+
         }
     }
 }

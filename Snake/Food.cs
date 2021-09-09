@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace Snake
 {
     abstract class Food
     {
+        private Poison _poison;
         private int _currentType;
         private Position _position;
         protected List<Position> _snakeBody;
         protected const int CLASSIC = 0, ACCELERATOR = 1, SPECIAL = 2;
         public int CurrentType { get => _currentType; protected set => _currentType = value; }
         public Position Position { get => _position; protected set => _position = value; }
-
+        public Poison Poison { set => _poison = value; }
         public static Food GetCurrentType(bool isSpecialActive, bool isAcceleratorActive)
         {
             Random random = new();
@@ -59,7 +59,7 @@ namespace Snake
             return null;
         }
 
-        protected void FindPosition()
+        protected virtual void FindPosition()
         {
             bool canSetPosition = true;
 
@@ -78,6 +78,11 @@ namespace Snake
                     {
                         continue;
                     }
+                }
+
+                if (_poison != null && Position == _poison.Position)
+                {
+                    canSetPosition = false;
                 }
 
             } while (!canSetPosition);

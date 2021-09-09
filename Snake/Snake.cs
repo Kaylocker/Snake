@@ -7,8 +7,9 @@ namespace Snake
     class Snake
     {
         private Food _food;
+        private Poison _poison;
         private ConsoleKey _input;
-
+        private List<Position> _snakeBody;
         private char _direction;
         private int _speed = 100;
         private int _acceleratorSpeed;
@@ -18,7 +19,6 @@ namespace Snake
         private const int _classicFood = 0, _acceleratorFood = 1, _specialFood = 2;
         private bool _isAlive = false;
         private bool _isEatedAccelerator = false;
-        private List<Position> _snakeBody;
 
 
         public ConsoleKey Input { set => _input = value; }
@@ -31,6 +31,18 @@ namespace Snake
                 if (_food == null)
                 {
                     _food = value;
+                }
+            }
+        }
+        public Poison DangerousFood
+        {
+            get => _poison;
+
+            set
+            {
+                if (_poison == null)
+                {
+                    _poison = value;
                 }
             }
         }
@@ -171,7 +183,7 @@ namespace Snake
             Position headSnake = new Position(_snakeBody[^1].X, _snakeBody[^1].Y);
             Position foodConcrete = _food.Position;
 
-            if (headSnake == _food.Position &&  _food.CurrentType == _classicFood)
+            if (headSnake == _food.Position && _food.CurrentType == _classicFood)
             {
                 Score.CurrentScore++;
             }
@@ -185,10 +197,11 @@ namespace Snake
                 Thread speedReset = new(ResetSpeed);
                 speedReset.Start();
             }
-            //else if (xPosition == Poison.X && yPosition == Poison.Y)
-            //{
-            //    _isAlive = false;
-            //}
+            else if (headSnake == _poison.Position)
+            {
+                _isAlive = false;
+                _poison.StopThread();
+            }
             else
             {
                 return;
@@ -260,6 +273,7 @@ namespace Snake
                 }
             }
         }
+
         public void ResetSpeed()
         {
             _acceleratorSpeed = _speed / 2;

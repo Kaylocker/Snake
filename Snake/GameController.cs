@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
 
 namespace Snake
@@ -11,6 +7,7 @@ namespace Snake
     {
         private Snake _snake;
         private Food _food;
+        private Poison _poison;
         private Menu _menu;
         private GameConfiguration _gameConfigurator = new GameConfiguration();
 
@@ -34,16 +31,16 @@ namespace Snake
             Console.Clear();
             Borders.DrawBorders();
             Score score = new();
-
             _snake = new Snake(_gameConfigurator.Speed);
             GenerateFood();
 
+            _poison = new Poison(_food, _gameConfigurator.IsPoisonActive, _snake);
+            _snake.DangerousFood = _poison;
 
-
-            //if (!Poison.IsThreadGeneratorActive)
-            //{
-            //    Poison.Generator();
-            //}
+            if (_poison != null)
+            {
+                _food.Poison = _poison;
+            }
 
             while (_snake.IsAlive)
             {
@@ -54,11 +51,11 @@ namespace Snake
                 {
                     GenerateFood();
                 }
-
                 _snake.PrintSnake();
                 _snake.OnCollisionEnter();
             }
 
+            _poison = null;
             _snake = null;
         }
 
