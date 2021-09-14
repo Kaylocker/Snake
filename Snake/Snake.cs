@@ -14,7 +14,7 @@ namespace Snake
         private List<Position> _snakeBody;
         private char _direction;
         private char _body = '♦';
-        private int _speed = 100, acceleratorSpeed;
+        private int _speed = 100, _acceleratorSpeed;
         private int _x, _y;
         private const char _leftDirection = 'l', _rightDirection = 'r', _upDirection = 'u', _downDirection = 'd';
         private const int _classicFood = 0, _acceleratorFood = 1, _specialFood = 2;
@@ -33,20 +33,9 @@ namespace Snake
                 }
             }
         }
-        public Poison DangerousFood
-        {
-            get => _poison;
-
-            set
-            {
-                if (_poison == null)
-                {
-                    _poison = value;
-                }
-            }
-        }
+        public Poison DangerousFood { get => _poison; set => _poison = value; }
         public Borders Borders { get => _borders; }
-        public bool IsAlive { get => _isAlive; }
+        public bool IsAlive { get => _isAlive; set => _isAlive = value; }
         public List<Position> SnakeBody { get => _snakeBody; private set => _snakeBody = value; }
         public int Speed { get => _speed; private set => _speed = value; }
 
@@ -107,8 +96,16 @@ namespace Snake
 
                         break;
                     }
+                case ConsoleKey.Escape:
+                    {
+                        _isAlive = false;
+                        _poison = null;
+
+                        break;
+                    }
                 default:
                     {
+                        _direction = _upDirection;
                         break;
                     }
             }
@@ -183,27 +180,37 @@ namespace Snake
         public void Eat()
         {
             Position headSnake = new Position(_snakeBody[^1].X, _snakeBody[^1].Y);
+            bool isEatSomeFood = false;
 
             if (headSnake == _food.Position && _food.CurrentType == _classicFood)
             {
                 _score.CurrentScore++;
+                isEatSomeFood = true;
             }
             else if (headSnake == _food.Position && _food.CurrentType == _specialFood)
             {
                 _score.CurrentScore += 5;
+                isEatSomeFood = true;
             }
             else if (headSnake == _food.Position && _food.CurrentType == _acceleratorFood)
             {
                 _score.CurrentScore += 2;
+                isEatSomeFood = true;
                 Thread speedReset = new(ResetSpeed);
                 speedReset.Start();
             }
-            else if (headSnake == _poison.Position)
+            else if (_poison!=null)
             {
-                _isAlive = false;
-                _poison.StopThread();
+                foreach (Position item in _poison.Position)
+                {
+                    if (item == headSnake)
+                    {
+                        _isAlive = false;
+                    }
+                }
             }
-            else
+
+            if(!isEatSomeFood)
             {
                 return;
             }

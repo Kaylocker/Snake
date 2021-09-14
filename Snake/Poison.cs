@@ -1,24 +1,22 @@
 ﻿using System;
-using System.Threading;
+using System.Collections.Generic;
 
 namespace Snake
 {
     class Poison
     {
-        object _poisonLocker = new();
-        Thread _poisonGenerator;
         private Food _food;
         private Random _random = new();
         private Snake _snake;
         private Borders _borders;
-        private Position _position;
-        private int DELAY = 300;
+        private List<Position> _positions;
+        private const int _countOfPoisons = 3;
         private char _body = '†';
-        private bool _isSnakeAlive;
+        private bool _isActive = false;
 
         public Food Food { init => _food = value; }
-        public bool IsSnakeAlive { get => _isSnakeAlive; set => _isSnakeAlive = value; }
-        public Position Position { get => _position; }
+        public List<Position> Position { get => _positions; }
+        public bool IsActive { get => _isActive; }
 
         public Poison(Food food, bool isPoisonActivate, Snake snake)
         {
@@ -30,73 +28,62 @@ namespace Snake
             Food = food;
             _snake = snake;
             _borders = _snake.Borders;
+            _isActive = true;
 
-            _poisonGenerator = new Thread(new ThreadStart(Generator));
-            _poisonGenerator.Start();
+            FindPosition();
 
-        }
-        private void Generator()
-        {
-            do
-            {
-                FindPosition();
-                SetPosition();
-
-
-                for (int i = 0; i < 10; i++)
-                {
-                    Thread.Sleep(DELAY);
-                }
-
-                ClearBody();
-
-            } while (_snake.IsAlive);
-
-            _poisonGenerator.Join();
-
-        }
-
-        public void StopThread()
-        {
-            _poisonGenerator.Join();
         }
 
         private void FindPosition()
         {
-            lock (_poisonLocker)
+            _positions = new List<Position>();
+
+            for (int i = 0; i < _countOfPoisons; i++)
             {
+                Position position;
                 bool canSetPosition = true;
+                int correctionBorderValue = 1;
 
                 do
                 {
-                    int x = _random.Next(1, _borders.Width - 1);
-                    int y = _random.Next(1, _borders.Height - 1);
+                    int x = _random.Next(correctionBorderValue, _borders.Width - correctionBorderValue);
+                    int y = _random.Next(correctionBorderValue, _borders.Height - correctionBorderValue);
 
-                    _position = new(x, y);
+                    position = new(x, y);
 
                     foreach (Position item in _snake.SnakeBody)
                     {
-                        if (item == _position)
+                        if (item == position)
                         {
                             canSetPosition = false;
                         }
                     }
 
-                    if (_food.Position == _position)
+                    foreach (Position item in _positions)
+                    {
+                        if (item == position)
+                        {
+                            canSetPosition = false;
+                        }
+                    }
+
+                    if (_food.Position == position)
                     {
                         canSetPosition = false;
                     }
-                } while (!canSetPosition);
-            }
 
+                } while (!canSetPosition);
+
+                _positions.Add(position);
+            }
         }
-         
-        private void SetPosition()
+
+        public void Instantiate()
         {
-            lock (_poisonLocker)
+            for (int i = 0; i < _countOfPoisons; i++)
             {
                 Console.CursorVisible = false;
-                Console.SetCursorPosition(_position.X, _position.Y);
+                Console.SetCursorPosition(_positions[i].X, _positions[i].Y);
                 Console.ForegroundColor = ConsoleColor.Black;
                 Console.BackgroundColor = ConsoleColor.DarkCyan;
                 Console.Write(_body);
@@ -105,16 +92,14 @@ namespace Snake
             }
         }
 
-        private void ClearBody()
+        public void Clear()
         {
-            //lock (_poisonLocker)
-            //{
-            Console.SetCursorPosition(_position.X, _position.Y);
-
-            Console.BackgroundColor = ConsoleColor.DarkCyan;
-            Console.WriteLine(" ");
-            //}
-
+            for (int i = 0; i < _countOfPoisons; i++)
+            {
+                Console.SetCursorPosition(_positions[i].X, _positions[i].Y);
+                Console.BackgroundColor = ConsoleColor.DarkCyan;
+                Console.WriteLine(" ");
+            }
         }
     }
 }

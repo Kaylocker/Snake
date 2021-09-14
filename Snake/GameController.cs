@@ -17,8 +17,14 @@ namespace Snake
 
         public GameController()
         {
-            Thread inputing = new(Inputing);
-            inputing.Start();
+            //Thread inputing = new(Inputing);
+            //inputing.Start();
+
+            new Thread(() =>
+            {
+                Thread.CurrentThread.IsBackground = true;
+                Inputing();
+            }).Start();
 
             _borders = new();
 
@@ -35,14 +41,7 @@ namespace Snake
             _snake = new Snake(_gameConfigurator, _borders, _score);
 
             GenerateFood();
-
-            _poison = new Poison(_food, _gameConfigurator.IsPoisonActive, _snake);
-            _snake.DangerousFood = _poison;
-
-            if (_poison != null)
-            {
-                _food.Poison = _poison;
-            }
+            GeneratePoison();
 
             while (_snake.IsAlive)
             {
@@ -52,6 +51,7 @@ namespace Snake
                 if (_snake.SearchingFood == null)
                 {
                     GenerateFood();
+                    GeneratePoison();
                 }
 
                 _snake.PrintBody();
@@ -69,18 +69,37 @@ namespace Snake
             _food.Instantiate(_snake.SnakeBody);
         }
 
+        private void GeneratePoison()
+        {
+            if (!_gameConfigurator.IsPoisonActive)
+            {
+                return;
+            }
+
+            if (_poison != null)
+            {
+                _poison.Clear();
+                _poison = null;
+            }
+
+            _poison = new Poison(_food, _gameConfigurator.IsPoisonActive, _snake);
+            _poison.Instantiate();
+            _snake.DangerousFood = _poison;
+            _food.Poison = _poison;
+        }
+
         private void Inputing()
         {
-            while (true)
+            do
             {
                 _key = Console.ReadKey(true);
                 _input = _key.Key;
 
-                if (_snake!=null)
+                if (_snake != null)
                 {
                     _snake.Input = _input;
                 }
-            }
+            } while (_key.Key==ConsoleKey.Escape);
         }
 
         private void ControllerLocalPosition()
@@ -133,6 +152,11 @@ namespace Snake
                             _input = default;
                             MainController();
 
+                            break;
+                        }
+                    case ConsoleKey.Escape:
+                        {
+                            _snake.IsAlive = false;
                             break;
                         }
                 }

@@ -90,15 +90,20 @@ namespace Snake
                 {
                     if (item == _position)
                     {
-                        continue;
+                        canSetPosition = false;
                     }
                 }
 
-                if (_poison != null && Position == _poison.Position)
+                if (_poison != null)
                 {
-                    canSetPosition = false;
+                    foreach (Position item in _poison.Position)
+                    {
+                        if (item == _position)
+                        {
+                            canSetPosition = false;
+                        }
+                    }
                 }
-
             } while (!canSetPosition);
         }
 
