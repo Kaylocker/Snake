@@ -156,7 +156,7 @@ namespace Snake
 
             string wallMode, standardFoodStatus, specialFoodStatus, poisonFoodStatus, acceleratorFoodStatus, soundStatus;
             {
-                _status.TryGetValue(Borders.EmptyWalls, out wallMode);
+                _status.TryGetValue(_gameConfigurator.IsWallsEmpty, out wallMode);
                 _status.TryGetValue(true, out standardFoodStatus);
                 _status.TryGetValue(_gameConfigurator.IsSpecialFoodActive, out specialFoodStatus);
                 _status.TryGetValue(_gameConfigurator.IsPoisonActive, out poisonFoodStatus);

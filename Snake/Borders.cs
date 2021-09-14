@@ -5,27 +5,24 @@ namespace Snake
 {
     class Borders
     {
+        private int _height = 30;
+        private int _width = 50;
+        private int _leftLimit = 0;
+        private int _topLImit = 0;
 
-        private static int _height = 30;
-        private static int _width = 50;
-        private static int _leftLimit = 0;
-        private static int _topLImit = 0;
-        private static bool _emptyWalls = false;
-        public static bool EmptyWalls { get => _emptyWalls; set => _emptyWalls = value; }
-
-        public static int Height { get => _height; }
-        public static int Width { get => _width; }
-        public static int LeftLimit { get => _leftLimit; }
-        public static int TopLimit { get => _topLImit; }
+        public int Height { get => _height; }
+        public int Width { get => _width; }
+        public int LeftLimit { get => _leftLimit; }
+        public int TopLimit { get => _topLImit; }
         public Borders()
         {
             Debug.Assert(OperatingSystem.IsWindows());
             Console.Title = "Snake";
             Console.SetWindowSize(_width, _height);
-            Console.SetBufferSize(_width+1, _height + 1);
+            Console.SetBufferSize(_width + 1, _height + 1);
         }
 
-        public static void DrawBorders()
+        public void DrawBorders()
         {
             Console.Clear();
 
@@ -33,14 +30,14 @@ namespace Snake
             {
                 for (int j = 0; j < _width; j++)
                 {
-                    if(i==0 || i == _height - 1)
+                    if (i == 0 || i == _height - 1)
                     {
                         Console.BackgroundColor = ConsoleColor.White;
                         Console.Write(" ");
                     }
                     else
                     {
-                        if(j==0 || j==_width-1)
+                        if (j == 0 || j == _width - 1)
                         {
                             Console.BackgroundColor = ConsoleColor.White;
                             Console.Write(" ");

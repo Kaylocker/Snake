@@ -6,6 +6,7 @@ namespace Snake
     abstract class Food
     {
         private Poison _poison;
+        private Borders _borders;
         private int _currentType;
         private Position _position;
         protected List<Position> _snakeBody;
@@ -13,6 +14,19 @@ namespace Snake
         public int CurrentType { get => _currentType; protected set => _currentType = value; }
         public Position Position { get => _position; protected set => _position = value; }
         public Poison Poison { set => _poison = value; }
+        public Borders Borders 
+        { 
+            get=>_borders;
+
+            set
+            {
+                if (_borders == null)
+                {
+                    _borders = value;
+                }
+            }
+        }
+
         public static Food GetCurrentType(bool isSpecialActive, bool isAcceleratorActive)
         {
             Random random = new();
@@ -67,8 +81,8 @@ namespace Snake
 
             do
             {
-                int x = random.Next(1, Borders.Width - 1);
-                int y = random.Next(1, Borders.Height - 1);
+                int x = random.Next(1, _borders.Width - 1);
+                int y = random.Next(1, _borders.Height - 1);
 
                 _position = new Position(x, y);
 

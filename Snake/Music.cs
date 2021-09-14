@@ -11,7 +11,6 @@ namespace Snake
     class Music
     {
         private static bool _isOn = true;
-
         public static bool IsOn { get => _isOn; set => _isOn = value; }
         public static void Play()
         {

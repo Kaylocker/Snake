@@ -9,8 +9,9 @@ namespace Snake
         private Food _food;
         private Poison _poison;
         private Menu _menu;
+        private Borders _borders;
+        private Score _score;
         private GameConfiguration _gameConfigurator = new GameConfiguration();
-
         private ConsoleKeyInfo _key = new ConsoleKeyInfo();
         private ConsoleKey _input;
 
@@ -19,7 +20,7 @@ namespace Snake
             Thread inputing = new(Inputing);
             inputing.Start();
 
-            Borders borders = new();
+            _borders = new();
 
             _menu = new(_gameConfigurator);
             Thread controller = new(ControllerLocalPosition);
@@ -29,9 +30,10 @@ namespace Snake
         private void Play()
         {
             Console.Clear();
-            Borders.DrawBorders();
-            Score score = new();
-            _snake = new Snake(_gameConfigurator.Speed);
+            _borders.DrawBorders();
+            _score = new(_borders);
+            _snake = new Snake(_gameConfigurator, _borders, _score);
+
             GenerateFood();
 
             _poison = new Poison(_food, _gameConfigurator.IsPoisonActive, _snake);
@@ -51,8 +53,8 @@ namespace Snake
                 {
                     GenerateFood();
                 }
-                _snake.PrintSnake();
-                _snake.OnCollisionEnter();
+
+                _snake.PrintBody();
             }
 
             _poison = null;
@@ -62,7 +64,8 @@ namespace Snake
         private void GenerateFood()
         {
             _food = Food.GetCurrentType(_gameConfigurator.IsSpecialFoodActive, _gameConfigurator.IsAcceleratorFoodActive);
-            _snake.SearchingFood = _food;;
+            _food.Borders = _borders;
+            _snake.SearchingFood = _food;
             _food.Instantiate(_snake.SnakeBody);
         }
 
@@ -278,13 +281,13 @@ namespace Snake
                     {
                         if (_menu.LocalPosition == (int)MenuPosition.Zero)
                         {
-                            if (!Borders.EmptyWalls)
+                            if (!_gameConfigurator.IsWallsEmpty)
                             {
-                                Borders.EmptyWalls = true;
+                                _gameConfigurator.IsWallsEmpty = true;
                             }
                             else
                             {
-                                Borders.EmptyWalls = false;
+                                _gameConfigurator.IsWallsEmpty = false;
                             }
                         }
                         else if (_menu.LocalPosition == (int)MenuPosition.First)

@@ -10,6 +10,7 @@ namespace Snake
         private Food _food;
         private Random _random = new();
         private Snake _snake;
+        private Borders _borders;
         private Position _position;
         private int DELAY = 300;
         private char _body = '†';
@@ -28,6 +29,7 @@ namespace Snake
 
             Food = food;
             _snake = snake;
+            _borders = _snake.Borders;
 
             _poisonGenerator = new Thread(new ThreadStart(Generator));
             _poisonGenerator.Start();
@@ -67,8 +69,8 @@ namespace Snake
 
                 do
                 {
-                    int x = _random.Next(1, Borders.Width - 1);
-                    int y = _random.Next(1, Borders.Height - 1);
+                    int x = _random.Next(1, _borders.Width - 1);
+                    int y = _random.Next(1, _borders.Height - 1);
 
                     _position = new(x, y);
 

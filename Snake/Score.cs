@@ -8,11 +8,12 @@ namespace Snake
 {
     class Score
     {
-        private static int _currentScore;
-        private static int _x = Borders.Width / 2 - 4;
-        private static int _y = 0;
+        Borders _borders;
+        private const int CORRECTION_VALUE = 4;
+        private int _currentScore;
+        private int _x, _y = 0;
 
-        public static int CurrentScore
+        public int CurrentScore
         {
             get
             {
@@ -21,17 +22,20 @@ namespace Snake
             set
             {
                 _currentScore=value;
+
                 ShowCurrentScore();
             }
         }
 
-        public Score()
+        public Score(Borders borders)
         {
             _currentScore = 0;
+            _borders = borders;
+            _x = _borders.Width / 2 - CORRECTION_VALUE;
             ShowCurrentScore();
         }
 
-        public static void ShowCurrentScore()
+        public void ShowCurrentScore()
         {
             Console.CursorVisible = false;
             Console.SetCursorPosition(_x, _y);
