@@ -6,10 +6,12 @@ namespace Snake
     class Classic : Food
     {
         private char _body = '♥';
+        private const int _score = 1;
 
         public Classic()
         {
             CurrentType = CLASSIC;
+            Score = _score;
         }
 
         private void Generate()

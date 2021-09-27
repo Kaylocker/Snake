@@ -6,10 +6,12 @@ namespace Snake
     class Special : Food
     {
         private char _body = '▲';
+        private const int _score = 5;
 
         public Special()
         {
             CurrentType = SPECIAL;
+            Score = _score;
         }
 
         private void Generate()

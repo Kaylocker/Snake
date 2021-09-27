@@ -5,32 +5,37 @@ namespace Snake
 {
     class GameController
     {
+        public event Action OnSwitchLocalMenuPosition;
+        public event Action OnSwitchGlobalMenuPosition;
+
         private Snake _snake;
         private Food _food;
         private Poison _poison;
         private Menu _menu;
+        private SoundManager _sound;
         private Borders _borders;
         private Score _score;
+        private Thread _inputing;
         private GameConfiguration _gameConfigurator = new GameConfiguration();
         private ConsoleKeyInfo _key = new ConsoleKeyInfo();
         private ConsoleKey _input;
 
+        private bool _isGameActive = true, _isGamePaused;
+
         public GameController()
         {
-            //Thread inputing = new(Inputing);
-            //inputing.Start();
-
-            new Thread(() =>
-            {
-                Thread.CurrentThread.IsBackground = true;
-                Inputing();
-            }).Start();
+            _inputing = new(Inputing);
+            _inputing.Start();
 
             _borders = new();
 
             _menu = new(_gameConfigurator);
-            Thread controller = new(ControllerLocalPosition);
+            _sound = new();
+
+            Thread controller = new(SwitchLocalMenuPosition);
             controller.Start();
+
+            SetSoundEventsDependencies();
         }
 
         private void Play()
@@ -43,18 +48,27 @@ namespace Snake
             GenerateFood();
             GeneratePoison();
 
-            while (_snake.IsAlive)
+            SetSnakeEventsDependencies();
+
+            while (_snake.IsAlive && _isGameActive)
             {
                 _snake.Move();
+                _snake.PrintBody();
                 _snake.Eat();
 
                 if (_snake.SearchingFood == null)
                 {
+                    if (_poison != null)
+                    {
+                        _poison.Clear();
+                        _poison = null;
+                    }
+
                     GenerateFood();
                     GeneratePoison();
                 }
 
-                _snake.PrintBody();
+                CheckPause();
             }
 
             _poison = null;
@@ -76,16 +90,45 @@ namespace Snake
                 return;
             }
 
-            if (_poison != null)
-            {
-                _poison.Clear();
-                _poison = null;
-            }
-
             _poison = new Poison(_food, _gameConfigurator.IsPoisonActive, _snake);
             _poison.Instantiate();
             _snake.DangerousFood = _poison;
-            _food.Poison = _poison;
+        }
+
+        private void SetSnakeEventsDependencies()
+        {
+            _snake.OnEat += _score.CollectScore;
+            _snake.OnEat += _sound.PlayEatSnake;
+            _snake.OnDied += _sound.PlayDeathSnake;
+        }
+
+        private void SetSoundEventsDependencies()
+        {
+            OnSwitchLocalMenuPosition += _sound.PlaySwitchLocalMenuPosition;
+            OnSwitchGlobalMenuPosition += _sound.PlaySwitchGlobalMenuPosition;
+        }
+
+        private void CheckPause()
+        {
+            if (_snake.IsPaused)
+            {
+                _isGamePaused = true;
+
+                do
+                {
+                    ConsoleKey input = Console.ReadKey(true).Key;
+
+                    if (input == ConsoleKey.P)
+                    {
+                        _isGamePaused = false;
+                        _snake.IsPaused = false;
+                        _snake.Input = default;
+                    }
+                }
+                while (_isGamePaused);
+                {
+                }
+            }
         }
 
         private void Inputing()
@@ -95,27 +138,23 @@ namespace Snake
                 _key = Console.ReadKey(true);
                 _input = _key.Key;
 
-                if (_snake != null)
+                if (_snake != null && !_snake.IsPaused)
                 {
                     _snake.Input = _input;
                 }
-            } while (_key.Key==ConsoleKey.Escape);
+            } while (true);
         }
 
-        private void ControllerLocalPosition()
+        private void SwitchLocalMenuPosition()
         {
             while (true)
             {
-                if (_snake!=null)
-                {
-                    continue;
-                }
-
                 switch (_input)
                 {
                     case ConsoleKey.W:
                     case ConsoleKey.UpArrow:
                         {
+                            OnSwitchLocalMenuPosition?.Invoke();
                             _menu.LocalPosition--;
 
                             if (_menu.LocalPosition < 0)
@@ -135,6 +174,7 @@ namespace Snake
                     case ConsoleKey.S:
                     case ConsoleKey.DownArrow:
                         {
+                            OnSwitchLocalMenuPosition?.Invoke();
                             _menu.LocalPosition++;
 
                             if (_menu.LocalPosition > _menu.CurrentMenu.Count - 1)
@@ -149,21 +189,27 @@ namespace Snake
                         }
                     case ConsoleKey.Enter:
                         {
+                            OnSwitchGlobalMenuPosition?.Invoke();
                             _input = default;
-                            MainController();
+                            MainSwitch();
 
                             break;
                         }
                     case ConsoleKey.Escape:
                         {
-                            _snake.IsAlive = false;
+                            if (_snake == null)
+                            {
+                                continue;
+                            }
+
+                            _isGameActive = false;
                             break;
                         }
                 }
             }
         }
 
-        private void MainController()
+        private void MainSwitch()
         {
             switch (_menu.GlobalPosition)
             {
@@ -186,7 +232,7 @@ namespace Snake
                         }
                         else if (_menu.LocalPosition == 2)
                         {
-                            System.Environment.Exit(1);
+                            Environment.Exit(1);
                         }
 
                         _menu.ShowCurrentMenu();
@@ -328,7 +374,16 @@ namespace Snake
                     {
                         if (_menu.LocalPosition == (int)MenuPosition.Zero)
                         {
-                            // sounds on off 
+                            if (_gameConfigurator.IsSoundOn)
+                            {
+                                _gameConfigurator.IsSoundOn = false;
+                                _sound.IsOn = false;
+                            }
+                            else
+                            {
+                                _gameConfigurator.IsSoundOn = true;
+                                _sound.IsOn = true;
+                            }
                         }
                         else if (_menu.LocalPosition == (int)MenuPosition.First)
                         {

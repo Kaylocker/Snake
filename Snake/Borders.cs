@@ -14,6 +14,7 @@ namespace Snake
         public int Width { get => _width; }
         public int LeftLimit { get => _leftLimit; }
         public int TopLimit { get => _topLImit; }
+
         public Borders()
         {
             Debug.Assert(OperatingSystem.IsWindows());

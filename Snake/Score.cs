@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
 
 namespace Snake
 {
@@ -32,7 +28,13 @@ namespace Snake
             _currentScore = 0;
             _borders = borders;
             _x = _borders.Width / 2 - CORRECTION_VALUE;
+
             ShowCurrentScore();
+        }
+
+        public void CollectScore(int score)
+        {
+            CurrentScore += score;
         }
 
         public void ShowCurrentScore()

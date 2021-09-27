@@ -31,7 +31,6 @@ namespace Snake
             _isActive = true;
 
             FindPosition();
-
         }
 
         private void FindPosition()
@@ -41,11 +40,13 @@ namespace Snake
             for (int i = 0; i < _countOfPoisons; i++)
             {
                 Position position;
-                bool canSetPosition = true;
+                bool canSetPosition;
                 int correctionBorderValue = 1;
 
                 do
                 {
+                    canSetPosition = true;
+
                     int x = _random.Next(correctionBorderValue, _borders.Width - correctionBorderValue);
                     int y = _random.Next(correctionBorderValue, _borders.Height - correctionBorderValue);
 

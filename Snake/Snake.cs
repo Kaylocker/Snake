@@ -6,10 +6,12 @@ namespace Snake
 {
     class Snake
     {
+        public event Action<int> OnEat;
+        public event Action OnDied;
+
         private Food _food;
         private Poison _poison;
         private Borders _borders;
-        private Score _score;
         private ConsoleKey _input;
         private List<Position> _snakeBody;
         private char _direction;
@@ -17,8 +19,9 @@ namespace Snake
         private int _speed = 100, _acceleratorSpeed;
         private int _x, _y;
         private const char _leftDirection = 'l', _rightDirection = 'r', _upDirection = 'u', _downDirection = 'd';
-        private const int _classicFood = 0, _acceleratorFood = 1, _specialFood = 2;
-        private bool _isAlive = false, _isEatedAccelerator = false, _isWallsEmpty;
+        private const int _accelerator = 1;
+        private bool _isAlive = false, _isEatedAccelerator = false, _isWallsEmpty, _isGoneThroughWall = false;
+        private bool _isPaused = false;
 
         public ConsoleKey Input { set => _input = value; }
         public Food SearchingFood
@@ -36,16 +39,15 @@ namespace Snake
         public Poison DangerousFood { get => _poison; set => _poison = value; }
         public Borders Borders { get => _borders; }
         public bool IsAlive { get => _isAlive; set => _isAlive = value; }
+        public bool IsPaused { get => _isPaused; set => _isPaused = value; }
         public List<Position> SnakeBody { get => _snakeBody; private set => _snakeBody = value; }
         public int Speed { get => _speed; private set => _speed = value; }
-
         public Snake(GameConfiguration gameconfigurator, Borders borders, Score score)
         {
             _isAlive = true;
             _speed = gameconfigurator.Speed;
             _isWallsEmpty = gameconfigurator.IsWallsEmpty;
             _borders = borders;
-            _score = score;
             _x = _borders.Width / 2;
             _y = _borders.Height / 2;
             _snakeBody = new();
@@ -96,16 +98,17 @@ namespace Snake
 
                         break;
                     }
+                case ConsoleKey.P:
+                    {
+                        _isPaused = true;
+
+                        break;
+                    }
                 case ConsoleKey.Escape:
                     {
                         _isAlive = false;
                         _poison = null;
 
-                        break;
-                    }
-                default:
-                    {
-                        _direction = _upDirection;
                         break;
                     }
             }
@@ -115,24 +118,29 @@ namespace Snake
         {
             GetDirection();
 
-            if (_direction == _leftDirection)
+            if (!_isGoneThroughWall)
             {
-                _x--;
+                if (_direction == _leftDirection)
+                {
+                    _x--;
+                }
+                else if (_direction == _rightDirection)
+                {
+                    _x++;
+                }
+                else if (_direction == _upDirection)
+                {
+                    _y--;
+                }
+                else if (_direction == _downDirection)
+                {
+                    _y++;
+                }
             }
-            else if (_direction == _rightDirection)
+            else
             {
-                _x++;
+                _isGoneThroughWall = false;
             }
-            else if (_direction == _upDirection)
-            {
-                _y--;
-            }
-            else if (_direction == _downDirection)
-            {
-                _y++;
-            }
-
-            OnCollisionEnter();
 
             _snakeBody.Add(new Position(_x, _y));
 
@@ -144,6 +152,8 @@ namespace Snake
             {
                 Thread.Sleep(_speed);
             }
+
+            OnCollisionEnter();
         }
 
         public void PrintBody()
@@ -167,10 +177,17 @@ namespace Snake
                 Console.Write(_body);
             }
 
-            Console.SetCursorPosition(_snakeBody[0].X, _snakeBody[0].Y);
-            Console.BackgroundColor = ConsoleColor.DarkCyan;
-            Console.Write(" ");
+            if (_snakeBody[0].X == 0 || _snakeBody[0].X == _borders.Width - 1 || _snakeBody[0].Y == 0 || _snakeBody[0].Y == _borders.Height - 1)
+            {
+                Console.BackgroundColor = ConsoleColor.White;
+            }
+            else
+            {
+                Console.BackgroundColor = ConsoleColor.DarkCyan;
+            }
 
+            Console.SetCursorPosition(_snakeBody[0].X, _snakeBody[0].Y);
+            Console.Write(" ");
 
             _snakeBody.RemoveAt(0);
 
@@ -180,43 +197,32 @@ namespace Snake
         public void Eat()
         {
             Position headSnake = new Position(_snakeBody[^1].X, _snakeBody[^1].Y);
-            bool isEatSomeFood = false;
 
-            if (headSnake == _food.Position && _food.CurrentType == _classicFood)
+            if (headSnake == _food.Position)
             {
-                _score.CurrentScore++;
-                isEatSomeFood = true;
+                if(_food.CurrentType == _accelerator)
+                {
+                    Thread speedReset = new(SpeetIncrease);
+                    speedReset.Start();
+                }
+
+                OnEat?.Invoke(_food.Score);
+
+                _snakeBody.Add(new Position(_snakeBody[^1].X, _snakeBody[^1].Y));
+                _food = null;
             }
-            else if (headSnake == _food.Position && _food.CurrentType == _specialFood)
-            {
-                _score.CurrentScore += 5;
-                isEatSomeFood = true;
-            }
-            else if (headSnake == _food.Position && _food.CurrentType == _acceleratorFood)
-            {
-                _score.CurrentScore += 2;
-                isEatSomeFood = true;
-                Thread speedReset = new(ResetSpeed);
-                speedReset.Start();
-            }
-            else if (_poison!=null)
+            else if (_poison != null)
             {
                 foreach (Position item in _poison.Position)
                 {
                     if (item == headSnake)
                     {
+                        OnDied?.Invoke();
                         _isAlive = false;
+                        return;
                     }
                 }
             }
-
-            if(!isEatSomeFood)
-            {
-                return;
-            }
-
-            _snakeBody.Add(new Position(_snakeBody[^1].X, _snakeBody[^1].Y));
-            _food = null;
         }
 
         public void OnCollisionEnter()
@@ -236,6 +242,8 @@ namespace Snake
                 {
                     _isAlive = false;
 
+                    OnDied?.Invoke();
+
                     Console.SetCursorPosition(xHeadSnakePosition, yHeadSnakePosition);
                     Console.BackgroundColor = ConsoleColor.Red;
                     Console.Write(" ");
@@ -244,7 +252,8 @@ namespace Snake
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.SetCursorPosition(_borders.Width / 2, _borders.Height / 2);
                     Console.WriteLine("YOUR LOSE");
-                    Thread.Sleep(5000);
+
+                    Thread.Sleep(1000);
                 }
             }
             else
@@ -253,34 +262,29 @@ namespace Snake
 
                 int x = xHeadSnakePosition, y = yHeadSnakePosition;
 
-                if (xHeadSnakePosition == CORRECTION_VALUE_ONE && _direction == _leftDirection)
+                if (xHeadSnakePosition == CORRECTION_VALUE_ZERO)
                 {
                     _x = _borders.Width - CORRECTION_VALUE_TWO;
-                    x = _borders.Width - CORRECTION_VALUE_ONE;
                 }
-                else if (xHeadSnakePosition == _borders.Width - CORRECTION_VALUE_TWO && _direction == _rightDirection)
+                else if (xHeadSnakePosition == _borders.Width - CORRECTION_VALUE_ONE)
                 {
                     _x = CORRECTION_VALUE_ONE;
-                    x = CORRECTION_VALUE_ZERO;
                 }
-                else if (yHeadSnakePosition == CORRECTION_VALUE_ONE && _direction == _upDirection)
+                else if (yHeadSnakePosition == CORRECTION_VALUE_ZERO)
                 {
                     _y = _borders.Height - CORRECTION_VALUE_TWO;
-                    y = _borders.Height - CORRECTION_VALUE_ONE;
                 }
-                else if (yHeadSnakePosition == _borders.Height - CORRECTION_VALUE_TWO && _direction == _downDirection)
+                else if (yHeadSnakePosition == _borders.Height - CORRECTION_VALUE_ONE)
                 {
                     _y = CORRECTION_VALUE_ONE;
-                    y = CORRECTION_VALUE_ZERO;
                 }
                 else
                 {
                     return;
                 }
 
-                Console.SetCursorPosition(x, y);
-                Console.BackgroundColor = ConsoleColor.White;
-                Console.Write(" ");
+                _isGoneThroughWall = true;
+
             }
         }
 
@@ -304,8 +308,8 @@ namespace Snake
                         Console.SetCursorPosition(_borders.Width / 2 - 5, _borders.Height / 2);
                         Console.WriteLine("GG");
                         Thread.Sleep(500);
+                        OnDied?.Invoke();
                         _isAlive = false;
-                        ClearSnakeBody();
                     }
 
                     counter++;
@@ -313,7 +317,7 @@ namespace Snake
             }
         }
 
-        public void ResetSpeed()
+        public void SpeetIncrease()
         {
             _acceleratorSpeed = _speed / 2;
             _isEatedAccelerator = true;
@@ -324,11 +328,6 @@ namespace Snake
             }
 
             _isEatedAccelerator = false;
-        }
-
-        private void ClearSnakeBody()
-        {
-            _snakeBody.Clear();
         }
     }
 }

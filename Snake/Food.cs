@@ -5,15 +5,15 @@ namespace Snake
 {
     abstract class Food
     {
-        private Poison _poison;
         private Borders _borders;
-        private int _currentType;
         private Position _position;
         protected List<Position> _snakeBody;
         protected const int CLASSIC = 0, ACCELERATOR = 1, SPECIAL = 2;
+        private int _currentType, _score;
+
         public int CurrentType { get => _currentType; protected set => _currentType = value; }
+        public int Score { get => _score; protected set => _score = value; }
         public Position Position { get => _position; protected set => _position = value; }
-        public Poison Poison { set => _poison = value; }
         public Borders Borders 
         { 
             get=>_borders;
@@ -32,12 +32,12 @@ namespace Snake
             Random random = new();
             double chance = random.NextDouble();
 
-            if (chance < 0.7)
+            if (chance < 0.8)
             {
                 Food classicFood = new Classic();
                 return classicFood;
             }
-            else if (chance >= 0.7 && chance < 0.85)
+            else if (chance >= 0.8 && chance < 0.9)
             {
                 if (isSpecialActive)
                 {
@@ -51,7 +51,7 @@ namespace Snake
                 }
 
             }
-            else if (chance >= 0.85)
+            else if (chance >= 0.9)
             {
                 if (isAcceleratorActive)
                 {
@@ -64,23 +64,20 @@ namespace Snake
                     return classicFood;
                 }
             }
-            else if (!isSpecialActive && !isAcceleratorActive)
-            {
-                Food classicFood = new Classic();
-                return classicFood;
-            }
 
             return null;
         }
 
         protected virtual void FindPosition()
         {
-            bool canSetPosition = true;
+            bool canSetPosition;
 
             Random random = new();
 
             do
             {
+                canSetPosition = true;
+
                 int x = random.Next(1, _borders.Width - 1);
                 int y = random.Next(1, _borders.Height - 1);
 
@@ -91,17 +88,6 @@ namespace Snake
                     if (item == _position)
                     {
                         canSetPosition = false;
-                    }
-                }
-
-                if (_poison != null)
-                {
-                    foreach (Position item in _poison.Position)
-                    {
-                        if (item == _position)
-                        {
-                            canSetPosition = false;
-                        }
                     }
                 }
             } while (!canSetPosition);

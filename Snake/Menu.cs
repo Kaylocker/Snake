@@ -7,15 +7,14 @@ namespace Snake
     class Menu
     {
         GameConfiguration _gameConfigurator;
-        private static int _height = 30;
-        private static int _width = 50;
+        private int _height = 30;
+        private int _width = 50;
         private int _globalPosition;
         private int _localPosition;
-        private readonly string _name;
         private int _currentSnakeSpeed;
-        
+        private readonly string _name;
 
-        private static Dictionary<bool, string> _status = new Dictionary<bool, string>();
+        private Dictionary<bool, string> _status = new Dictionary<bool, string>();
         private List<Menu> _currentMenu = new();
         private List<Menu> _start = new();
         private List<Menu> _settings = new();
@@ -24,7 +23,7 @@ namespace Snake
         private List<Menu> _wallSettings = new();
         private List<Menu> _soundSettings = new();
 
-        public GameConfiguration GameConfigurator { get=>_gameConfigurator; init=>_gameConfigurator=value; }
+        public GameConfiguration GameConfigurator { get => _gameConfigurator; init => _gameConfigurator = value; }
         public List<Menu> Start { get => _start; private set => _start = value; }
         public List<Menu> Settings { get => _settings; private set => _settings = value; }
         public List<Menu> SpeedSettings { get => _speedSettings; private set => _speedSettings = value; }
@@ -52,19 +51,25 @@ namespace Snake
             _status.Add(false, "OFF");
             _status.Add(true, "ON");
 
+            SetAllMenuLists();
+
+            DrawBackgroundMenu();
+            ShowCurrentMenu();
+        }
+
+        public Menu(string name)
+        {
+            _name = name;
+        }
+
+        private void SetAllMenuLists()
+        {
             SetStartMenu();
             SetSettingsMenu();
             SetSpeedSettings();
             SetFoodTypeSettings();
             SetWallSettings();
             SetSoundSettings();
-            DrawBackgroundMenu();
-            ShowCurrentMenu();
-        }
-
-        public Menu(string name, Dictionary<bool, string> status = null)
-        {
-            _name = name;
         }
 
         private void SetStartMenu()
@@ -114,13 +119,14 @@ namespace Snake
 
         public void ShowCurrentMenu()
         {
+            const int CORRECTION_VALUE = 7;
             int counter = 0;
 
             Clear();
 
             foreach (Menu item in _currentMenu)
             {
-                Console.SetCursorPosition((_width / 2) - item._name.Length / 2, _height / 2 + counter - 7);
+                Console.SetCursorPosition((_width / 2) - item._name.Length / 2, _height / 2 + counter - CORRECTION_VALUE);
 
                 if (counter == _localPosition)
                 {
@@ -145,13 +151,14 @@ namespace Snake
         private void ShowGameInformation()
         {
             ConsoleColor gameInformationTextColor = ConsoleColor.Yellow;
-            int counter = 1;
+            int yOffsetState = 1;
+
             Console.SetCursorPosition((1), _height / 2);
             Console.BackgroundColor = ConsoleColor.DarkCyan;
             Console.ForegroundColor = gameInformationTextColor;
 
             Console.Write("Current game settings");
-            Console.SetCursorPosition((1), _height / 2 + counter++);
+            Console.SetCursorPosition((1), _height / 2 + yOffsetState++);
             Console.Write($"Speed: {10000 / CurrentSnakeSpeed }  ");
 
             string wallMode, standardFoodStatus, specialFoodStatus, poisonFoodStatus, acceleratorFoodStatus, soundStatus;
@@ -161,12 +168,12 @@ namespace Snake
                 _status.TryGetValue(_gameConfigurator.IsSpecialFoodActive, out specialFoodStatus);
                 _status.TryGetValue(_gameConfigurator.IsPoisonActive, out poisonFoodStatus);
                 _status.TryGetValue(_gameConfigurator.IsAcceleratorFoodActive, out acceleratorFoodStatus);
-                _status.TryGetValue(Music.IsOn, out soundStatus);
+                _status.TryGetValue(_gameConfigurator.IsSoundOn, out soundStatus);
             }
 
-            Console.SetCursorPosition((1), _height / 2 + counter++);
+            Console.SetCursorPosition((1), _height / 2 + yOffsetState++);
             Console.Write($"Empty walls:  {wallMode} ");
-            Console.SetCursorPosition((1), _height / 2 + counter++);
+            Console.SetCursorPosition((1), _height / 2 + yOffsetState++);
             {
                 Console.Write($"Standart food: ");
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -174,7 +181,7 @@ namespace Snake
                 Console.ForegroundColor = gameInformationTextColor;
                 Console.Write(standardFoodStatus + " ");
             }
-            Console.SetCursorPosition((1), _height / 2 + counter++);
+            Console.SetCursorPosition((1), _height / 2 + yOffsetState++);
             {
                 Console.Write($"Special food: ");
                 Console.ForegroundColor = ConsoleColor.Yellow;
@@ -182,7 +189,7 @@ namespace Snake
                 Console.ForegroundColor = gameInformationTextColor;
                 Console.Write(specialFoodStatus + " ");
             }
-            Console.SetCursorPosition((1), _height / 2 + counter++);
+            Console.SetCursorPosition((1), _height / 2 + yOffsetState++);
             {
                 Console.Write($"Poison: ");
                 Console.ForegroundColor = ConsoleColor.Black;
@@ -190,7 +197,7 @@ namespace Snake
                 Console.ForegroundColor = gameInformationTextColor;
                 Console.Write(poisonFoodStatus + " ");
             }
-            Console.SetCursorPosition((1), _height / 2 + counter++);
+            Console.SetCursorPosition((1), _height / 2 + yOffsetState++);
             {
                 Console.Write($"Accelerator: ");
                 Console.ForegroundColor = ConsoleColor.DarkYellow;
@@ -198,7 +205,7 @@ namespace Snake
                 Console.ForegroundColor = gameInformationTextColor;
                 Console.Write(acceleratorFoodStatus + " ");
             }
-            Console.SetCursorPosition((1), _height / 2 + counter++);
+            Console.SetCursorPosition((1), _height / 2 + yOffsetState++);
             Console.Write($"Sound: {soundStatus} ");
 
             Console.SetCursorPosition((int)MenuPosition.Zero, (int)MenuPosition.Zero);
@@ -236,7 +243,7 @@ namespace Snake
             }
         }
 
-        private static void Clear()
+        private void Clear()
         {
             for (int i = 0; i < 9; i++)
             {
